@@ -23,9 +23,10 @@ and when a quota runs out, it quietly moves on to your next account.
 <br>
 
 > [!NOTE]
-> **krazyeom Custom Build (`v0.1.2374-krazyeom.1`)**  
-> 이 빌드는 Google Antigravity CLI(`agy`) 다중 계정 풀링, 자동 페일오버, GUI/CLI 실시간 스위칭 및 macOS 키체인 동기화를 지원합니다.  
-> 자세한 사용법과 아키텍처는 **[Antigravity Guide](docs/antigravity-guide.md)**를 참고하십시오.
+> ### krazyeom Custom Build (`v0.1.2374-krazyeom.1`)
+>
+> This build supports Google Antigravity CLI (`agy`) multi-account pooling, automatic failover, real-time GUI/CLI account switching, and two-way macOS Keychain synchronization.  
+> For detailed usage instructions and architecture, refer to the [Antigravity Guide](docs/antigravity-guide.md).
 
 <br>
 
@@ -291,7 +292,7 @@ Find them under Plugins › Discover › Gateway middleware. See [Gateway middle
 | | |
 | :-- | :-- |
 | **[Get started](https://usemagpie.ai/docs/start)** | The guided tour |
-| **[Antigravity Guide](docs/antigravity-guide.md)** | Antigravity CLI 다중 계정 풀링, GUI/CLI 스위칭 및 시스템 키체인 동기화 매뉴얼 |
+| [Antigravity Guide](docs/antigravity-guide.md) | Multi-account pooling, GUI/CLI switching, and macOS Keychain synchronization manual for Antigravity CLI |
 | **[Reference](docs/reference.md)** | Every agent, provider option, gateway endpoint, CLI command and file |
 | **[Plugins](https://usemagpie.ai/docs/plugins)** | Use plugins and write your own |
 | **[Intent routing](https://usemagpie.ai/docs/intent)** | Route each turn by what it asks for |
