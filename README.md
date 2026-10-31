@@ -18,7 +18,14 @@ and when a quota runs out, it quietly moves on to your next account.
 <a href="https://usemagpie.ai/go/apinebula/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-apinebula-dark.svg"><img src="site/public/img/sponsor-apinebula.svg" width="144" height="36" alt="APINEBULA"></picture></a>&emsp;&emsp;<a href="https://usemagpie.ai/go/zerotoken/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-zerotoken-dark.svg"><img src="site/public/img/sponsor-zerotoken.svg" width="144" height="36" alt="零词元"></picture></a>&emsp;&emsp;<a href="https://usemagpie.ai/go/kimi/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-kimi-dark.svg"><img src="site/public/img/sponsor-kimi.svg" width="144" height="36" alt="Kimi"></picture></a><br>
 <a href="https://usemagpie.ai/go/apikeyfan/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-apikeyfan-dark.svg"><img src="site/public/img/sponsor-apikeyfan.svg" width="144" height="36" alt="APIKEY.FAN"></picture></a>&emsp;&emsp;<a href="https://usemagpie.ai/go/wandapi/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-wandapi-dark.svg"><img src="site/public/img/sponsor-wandapi.svg" width="144" height="36" alt="WandAPI"></picture></a>&emsp;&emsp;<a href="https://usemagpie.ai/go/aigocode/readme"><picture><source media="(prefers-color-scheme: dark)" srcset="site/public/img/sponsor-aigocode-readme-dark.png"><img src="site/public/img/sponsor-aigocode-readme.png" width="144" height="36" alt="AIGoCode"></picture></a>
 
-**[Download](https://usemagpie.ai)** &nbsp;·&nbsp; **[Docs](https://usemagpie.ai/docs/start)** &nbsp;·&nbsp; **[Reference](docs/reference.md)** &nbsp;·&nbsp; **[Plugins](https://github.com/magpie-community/plugins)** &nbsp;·&nbsp; **[Discord](https://discord.gg/vGSnD3ZKQF)** &nbsp;·&nbsp; **English** · [简体中文](README.zh-CN.md)
+**[Download](https://usemagpie.ai)** &nbsp;·&nbsp; **[Docs](https://usemagpie.ai/docs/start)** &nbsp;·&nbsp; **[Reference](docs/reference.md)** &nbsp;·&nbsp; **[Antigravity Guide](docs/antigravity-guide.md)** &nbsp;·&nbsp; **[Plugins](https://github.com/magpie-community/plugins)** &nbsp;·&nbsp; **[Discord](https://discord.gg/vGSnD3ZKQF)** &nbsp;·&nbsp; **English** · [简体中文](README.zh-CN.md)
+
+<br>
+
+> [!NOTE]
+> **krazyeom Custom Build (`v0.1.2374-krazyeom.1`)**  
+> 이 빌드는 Google Antigravity CLI(`agy`) 다중 계정 풀링, 자동 페일오버, GUI/CLI 실시간 스위칭 및 macOS 키체인 동기화를 지원합니다.  
+> 자세한 사용법과 아키텍처는 **[Antigravity Guide](docs/antigravity-guide.md)**를 참고하십시오.
 
 <br>
 
@@ -284,6 +291,7 @@ Find them under Plugins › Discover › Gateway middleware. See [Gateway middle
 | | |
 | :-- | :-- |
 | **[Get started](https://usemagpie.ai/docs/start)** | The guided tour |
+| **[Antigravity Guide](docs/antigravity-guide.md)** | Antigravity CLI 다중 계정 풀링, GUI/CLI 스위칭 및 시스템 키체인 동기화 매뉴얼 |
 | **[Reference](docs/reference.md)** | Every agent, provider option, gateway endpoint, CLI command and file |
 | **[Plugins](https://usemagpie.ai/docs/plugins)** | Use plugins and write your own |
 | **[Intent routing](https://usemagpie.ai/docs/intent)** | Route each turn by what it asks for |
