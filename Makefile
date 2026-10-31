@@ -9,7 +9,7 @@ endif
 
 # A tag may hold $, ( or `, which the shell lines below would run: the
 # version keeps only what a version is spelled with.
-VERSION ?= $(or $(shell git describe --tags --always --dirty 2>/dev/null | tr -cd 'A-Za-z0-9._+-'),dev)
+VERSION ?= $(or $(shell git describe --tags --always --dirty --match "*-krazyeom*" 2>/dev/null | tr -cd 'A-Za-z0-9._+-'),$(shell git describe --tags --always --dirty 2>/dev/null | tr -cd 'A-Za-z0-9._+-')-krazyeom,dev-krazyeom)
 LDFLAGS  = -s -w -X main.version=$(VERSION)
 TAGS     = production
 TARGETS  = darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64 windows/arm64 android/arm64

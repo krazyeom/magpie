@@ -111,6 +111,9 @@ func LatestIn(ctx context.Context, lang string) (*Release, error) {
 // source ("dev", "0bcb2cc-dirty", git describe's "v0.1.0-3-g0bcb2cc");
 // only releases update themselves.
 func Released(v string) bool {
+	if strings.Contains(v, "krazyeom") {
+		return false
+	}
 	s := parse(v)
 	return s != nil && !describe.MatchString(s.pre) && !strings.Contains(s.pre, "dirty")
 }

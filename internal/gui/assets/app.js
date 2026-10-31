@@ -19868,6 +19868,12 @@ function renderSettings() {
   const site = el("button", "text", t("Open"));
   site.onclick = () => api("open", { url: "https://usemagpie.ai" }).catch(() => {});
   row(t("Website"), t("downloads, docs and what's new"), "usemagpie.ai", site);
+  const forkBtn = el("button", "github");
+  forkBtn.innerHTML = GITHUB_SVG;
+  forkBtn.append(el("span", "", "GitHub"));
+  forkBtn.title = "github.com/krazyeom/magpie";
+  forkBtn.onclick = () => api("open", { url: "https://github.com/krazyeom/magpie" }).catch(() => {});
+  row(t("Custom build"), t("Maintained by krazyeom"), "krazyeom/magpie", forkBtn);
   const lic = el("button", "text", t("View"));
   lic.onclick = showNotices;
   row(t("Open-source licenses"), t("the notices of the code and data magpie is built with"), "", lic);
@@ -22496,7 +22502,7 @@ async function renderUpdate(r, u) {
       btn(t("Check"), check);
       break;
     default: // built from source
-      sub.textContent = "";
+      sub.textContent = (u?.current || r.querySelector(".val code")?.textContent || "").includes("krazyeom") ? t("Custom build by krazyeom") : "";
   }
   if (kept && !pageShown) kept.remove();
 }

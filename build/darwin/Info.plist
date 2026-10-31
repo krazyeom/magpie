@@ -21,6 +21,6 @@
 			<key>CFBundleURLSchemes</key><array><string>magpie</string></array>
 		</dict>
 	</array>
-	<key>NSHumanReadableCopyright</key><string>yetone</string>
+	<key>NSHumanReadableCopyright</key><string>krazyeom (forked from yetone)</string>
 </dict>
 </plist>
