@@ -19,6 +19,7 @@ import (
 	"cmp"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -221,11 +222,108 @@ type googleLogin struct {
 	acct googleAccount
 }
 
+var (
+	antigravityKeychain     keychain = securityKeychain{}
+	antigravityKeychainHere          = runtime.GOOS == "darwin"
+)
+
+func antigravityOwnLogin() (googleAccount, bool) {
+	if !antigravityKeychainHere || discoveryOff() {
+		return googleAccount{}, false
+	}
+	raw, err := antigravityKeychain.Find("gemini", "antigravity")
+	if err != nil {
+		return googleAccount{}, false
+	}
+	text := strings.TrimSpace(string(raw))
+	const prefix = "go-keyring-base64:"
+	if !strings.HasPrefix(text, prefix) {
+		return googleAccount{}, false
+	}
+	decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(text, prefix))
+	if err != nil {
+		return googleAccount{}, false
+	}
+	var item struct {
+		IDTokenEmail string `json:"id_token_email"`
+		Token        struct {
+			AccessToken  string    `json:"access_token"`
+			RefreshToken string    `json:"refresh_token"`
+			Expiry       time.Time `json:"expiry"`
+		} `json:"token"`
+	}
+	if err := json.Unmarshal(decoded, &item); err != nil || item.Token.RefreshToken == "" {
+		return googleAccount{}, false
+	}
+	user := item.IDTokenEmail
+	if user == "" {
+		user = "antigravity"
+	}
+	app, _ := googleAppOf("antigravity")
+	auth := googleAuth{
+		AccessToken:  item.Token.AccessToken,
+		RefreshToken: item.Token.RefreshToken,
+		Expiry:       item.Token.Expiry.UnixMilli(),
+		Project:      savedGoogleProject("antigravity", user),
+	}
+	return googleAccount{app: app, user: user, auth: auth, own: true}, true
+}
+
+func syncAntigravityKeychain(user string) error {
+	if !antigravityKeychainHere || discoveryOff() {
+		return nil
+	}
+	loginsMu.Lock()
+	saved := readLogins()
+	loginsMu.Unlock()
+
+	var target savedLogin
+	found := false
+	for _, l := range saved {
+		if (l.Agent == "antigravity" || l.Agent == "gemini") && strings.EqualFold(l.User, user) {
+			target = l
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil
+	}
+	var a googleAuth
+	if err := json.Unmarshal(target.Auth, &a); err != nil || a.RefreshToken == "" {
+		return nil
+	}
+	var exp time.Time
+	if a.Expiry > 0 {
+		exp = time.UnixMilli(a.Expiry)
+	} else {
+		exp = time.Now().Add(time.Hour)
+	}
+	payload := map[string]any{
+		"auth_method":    "oauth",
+		"id_token_email": target.User,
+		"token": map[string]any{
+			"access_token":  a.AccessToken,
+			"token_type":    "Bearer",
+			"refresh_token": a.RefreshToken,
+			"expiry":        exp.Format(time.RFC3339Nano),
+		},
+	}
+	jsonBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	encoded := "go-keyring-base64:" + base64.StdEncoding.EncodeToString(jsonBytes)
+	return antigravityKeychain.Put("gemini", "antigravity", []byte(encoded))
+}
+
 // googleLogins lists an app's accounts, the first in use first.
 func googleLogins(agent string) []googleLogin {
 	own, hasOwn := googleAccount{}, false
 	if agent == "gemini" {
 		own, hasOwn = geminiOwnLogin()
+	} else if agent == "antigravity" {
+		own, hasOwn = antigravityOwnLogin()
 	}
 	ownUser := ""
 	if hasOwn {
@@ -257,7 +355,13 @@ func googleSide(agent string) []sideLogin {
 func googleLoginList(agent string) []Login { return loginsOf(googleSide(agent)) }
 
 func switchGoogleLogin(agent, user string) error {
-	return switchSideLogin(agent, user, googleSide(agent))
+	if err := switchSideLogin(agent, user, googleSide(agent)); err != nil {
+		return err
+	}
+	if agent == "antigravity" || agent == "agy" {
+		_ = syncAntigravityKeychain(user)
+	}
+	return nil
 }
 
 func setGoogleLoginOn(agent, user string, on bool) error {

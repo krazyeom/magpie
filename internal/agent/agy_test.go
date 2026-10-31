@@ -121,6 +121,32 @@ func TestAgy(t *testing.T) {
 	}
 }
 
+func TestAgyAccountField(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(home, ".cache"))
+	path := filepath.Join(home, ".gemini", "antigravity-cli", "settings.json")
+	os.MkdirAll(filepath.Dir(path), 0o755)
+	os.WriteFile(path, []byte(`{"model": "gemini-2.5-pro"}`), 0o644)
+
+	a, err := Find("agy")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := a.Field("account")
+	if f == nil {
+		t.Fatal("agy has no account field")
+	}
+	if f.Label != "account" || !f.Quiet {
+		t.Fatalf("account field: %+v", f)
+	}
+	if got := f.Get(); got != "" {
+		t.Fatalf("expected empty account with no logins, got %q", got)
+	}
+}
+
 func agyJSON(v any) string { b, _ := json.Marshal(v); return string(b) }
 
 func agyRead(t *testing.T, path string) string {

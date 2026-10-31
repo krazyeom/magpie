@@ -1610,11 +1610,12 @@ function connectRow(a, row, who, { fields, extras, fieldBtn, sw, kind }) {
 // panel's (shuizhuyu on X) is drawn from the kept list (?last=1): a fresh
 // read takes seconds after a start, so it waits for the menu
 let accountSwitched = null, panelAccts = null;
-const switchesAccounts = (a) => !a.wired && (a.id === "claude" || a.id === "codex");
+const switchesAccounts = (a) => !a.wired && (a.id === "claude" || a.id === "codex" || a.id === "agy");
 
 function switchable(a) {
   if (!switchesAccounts(a)) return null;
-  const p = (mode === "panel" ? panelAccts : providers || providersEarly?.got)?.providers?.find((x) => x.id === a.id && x.account?.agent === a.id);
+  const targetId = a.id === "agy" ? "antigravity" : a.id;
+  const p = (mode === "panel" ? panelAccts : providers || providersEarly?.got)?.providers?.find((x) => (x.id === targetId || x.id === a.id) && (x.account?.agent === targetId || x.account?.agent === a.id));
   return p && loginsInOrder(p.account, p)[0]?.user ? p : null;
 }
 
@@ -1638,8 +1639,8 @@ function switchEntry(a) {
     setTimeout(() => b.classList.remove("done"), 5000 - ago);
   }
   b.append(pn ? el("span", "chev", svg(CHEV, 11, 1.7)) : svg(CHEV, 10, 1.6));
-  const opts = ls.filter((l) => !l.token).map((l) => ({ v: "u:" + l.user, name: l.user, literalName: true, note: l.lapsed ? "Sign-in required" : accountPlan({ agent: a.id, plan: l.plan }) }));
-  const on = cx ? t("magpie only switches {agent}'s sign-in; its requests go straight to OpenAI", ag) : t("magpie serves no requests on these accounts");
+  const opts = ls.filter((l) => !l.token).map((l) => ({ v: "u:" + l.user, name: l.user, literalName: true, note: l.lapsed ? "Sign-in required" : accountPlan({ agent: p.id, plan: l.plan }) }));
+  const on = cx ? t("magpie only switches {agent}'s sign-in; its requests go straight to OpenAI", ag) : a.id === "agy" ? t("magpie only switches {agent}'s sign-in; its requests go straight to Google", ag) : t("magpie serves no requests on these accounts");
   // the Only switch setting, where the accounts page offers it
   if (!cx || ls.filter((l) => !l.lapsed && (l.active || l.on)).length > 1) opts.push({ v: "only", name: t("Only switch {agent}'s sign-in", ag), literalName: true, ticked: !!p.switchOnly, note: on });
   opts.push({ v: "manage", name: "Manage accounts…", note: "" });
@@ -1656,7 +1657,7 @@ function switchEntry(a) {
       const l = ls.find((x) => "u:" + x.user === v);
       if (v === "only") accountAction("provider/switchonly", { id: p.id, switchOnly: !p.switchOnly }, !p.switchOnly ? on
         : cx ? t("{agent}'s requests go through magpie to fail over to your other accounts again", ag) : t("magpie serves requests on these accounts again"));
-      else if (v === "manage" || l?.lapsed) pn ? api("window/main?view=providers", {}).catch(statusErr) : openProvider(a.id);
+      else if (v === "manage" || l?.lapsed) pn ? api("window/main?view=providers", {}).catch(statusErr) : openProvider(p.id);
       else if (l && l.user !== cur) switchAccountTo(a, p, l.user);
     }, "Switch accounts only", "sess-menu", "right");
   };
@@ -1665,8 +1666,9 @@ function switchEntry(a) {
 
 async function switchAccountTo(a, p, user) {
   const said = t("{agent} is now signed in as {user}. New {agent} sessions use this account; one already open keeps its account until it is started again.", { agent: a.name, user });
+  const agParam = a.id === "agy" ? "antigravity" : a.id;
   // kept signed in to one of the user's choosing (#524): that choice moves
-  if (!await (keptLogin(p) ? accountAction("provider/keeplogin", { id: p.id, keepLogin: true, keepLoginAs: user }, said) : accountAction("login/switch", { agent: a.id, user }, said))) return;
+  if (!await (keptLogin(p) ? accountAction("provider/keeplogin", { id: p.id, keepLogin: true, keepLoginAs: user }, said) : accountAction("login/switch", { agent: agParam, user }, said))) return;
   accountSwitched = { agent: a.id, user, at: performance.now() };
   renderAgents();
 }

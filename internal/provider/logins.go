@@ -939,7 +939,10 @@ func Logins(agent string) []Login {
 		return copilotLoginList()
 	case ChatGPTAPIID:
 		return siwcLoginList()
-	case "gemini", "antigravity":
+	case "gemini", "antigravity", "agy":
+		if agent == "agy" {
+			agent = "antigravity"
+		}
 		return googleLoginList(agent)
 	case "":
 		// a plugin's accounts go by its provider's id (a moved built-in's
@@ -1049,6 +1052,14 @@ func InUseLogin(agent string) string {
 // an allowance is read. "" when the agent has none, or is none whose
 // own sign-in is paused for its others (Claude Code's and Codex's).
 func FirstLogin(agent string) string {
+	if agent == "agy" || agent == "antigravity" {
+		for _, l := range Logins("antigravity") {
+			if l.Active {
+				return l.User
+			}
+		}
+		return ""
+	}
 	if !slices.Contains(loginAgents, agent) {
 		return ""
 	}
@@ -1166,7 +1177,10 @@ func switchLogin(agent, user string) error {
 		return switchCopilotLogin(user)
 	case ChatGPTAPIID:
 		return switchSIWCLogin(user)
-	case "gemini", "antigravity":
+	case "gemini", "antigravity", "agy":
+		if agent == "agy" {
+			agent = "antigravity"
+		}
 		return switchGoogleLogin(agent, user)
 	}
 	from, err := switchSavedLogin(agent, user)

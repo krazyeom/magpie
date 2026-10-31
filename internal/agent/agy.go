@@ -40,6 +40,7 @@ import (
 
 	"github.com/yetone/magpie/internal/edit"
 	"github.com/yetone/magpie/internal/gateway"
+	"github.com/yetone/magpie/internal/provider"
 	"github.com/yetone/magpie/internal/update"
 )
 
@@ -211,7 +212,7 @@ func agyIn(at place) *Agent {
 	dir := filepath.Join(home, ".gemini", "antigravity-cli")
 	path := filepath.Join(dir, "settings.json")
 	get := jsonGet(path, "model")
-	provider := jsonGet(path, "modelProvider")
+	modelProvider := jsonGet(path, "modelProvider")
 	stashModel, stashProvider := "agy:"+path+":model", "agy:"+path+":modelProvider"
 	// setModels writes customModels with the user's own and, when with,
 	// magpie's; none left takes the key out
@@ -320,7 +321,7 @@ func agyIn(at place) *Agent {
 			if _, ok := agyCustom(path)[v]; !ok {
 				return "Antigravity CLI's custom model " + v + " (settings.json) is gone, so it no longer reaches magpie"
 			}
-			if p := provider(); p != "gemini" {
+			if p := modelProvider(); p != "gemini" {
 				return "Antigravity CLI's modelProvider (settings.json) is " + orDefault(p) + ", not gemini, so it asks Google directly"
 			}
 			// a distro's function names the gateway's address: one WSL
@@ -334,66 +335,99 @@ func agyIn(at place) *Agent {
 			}
 			return ""
 		},
-		Fields: []Field{{
-			Key: "model", Label: "model",
-			Get: get,
-			Set: func(v string) error {
-				cur := get()
-				if ref, ok := strings.CutPrefix(v, magpieID+"/"); ok && isMagpie(ref) {
-					if !usesMagpie(cur) {
-						stash(map[string]string{stashModel: cur, stashProvider: provider()})
-					}
-					if err := setModels(true); err != nil {
-						return err
-					}
-					if err := edit.SetJSON(path, edit.KV{Path: "modelProvider", Value: "gemini"}, edit.KV{Path: "model", Value: v}); err != nil {
-						return err
-					}
-					shell(true)
-					return nil
-				}
-				if usesMagpie(cur) {
-					// back to what the user had
-					if v == "" {
-						v = unstash(stashModel)
-					} else {
-						forget(stashModel)
-					}
-					if err := put("modelProvider", unstash(stashProvider)); err != nil {
-						return err
-					}
-				}
-				if err := put("model", v); err != nil {
-					return err
-				}
-				if usesMagpie(cur) {
-					shell(false)
-				}
-				return setModels(false)
-			},
-			Options: func(cur map[string]string) []Option {
-				custom := agyCustom(path)
-				// its own say they go to their provider, not through magpie,
-				// as every agent's own do (EZN7L2C3, #834)
-				var own []Option
-				for k := range custom {
-					if !strings.HasPrefix(k, magpieID+"/") {
-						to := "Google"
-						if p := gjson.GetBytes(custom[k], "apiProvider").String(); strings.Contains(p, "ANTHROPIC") {
-							to = "Anthropic"
-						} else if strings.Contains(p, "OPENAI") {
-							to = "OpenAI"
+		Fields: []Field{
+			{
+				Key: "model", Label: "model",
+				Get: get,
+				Set: func(v string) error {
+					cur := get()
+					if ref, ok := strings.CutPrefix(v, magpieID+"/"); ok && isMagpie(ref) {
+						if !usesMagpie(cur) {
+							stash(map[string]string{stashModel: cur, stashProvider: modelProvider()})
 						}
-						own = append(own, Option{Value: k, Icon: modelIcon("", gjson.GetBytes(custom[k], "modelName").String()), Direct: to})
+						if err := setModels(true); err != nil {
+							return err
+						}
+						if err := edit.SetJSON(path, edit.KV{Path: "modelProvider", Value: "gemini"}, edit.KV{Path: "model", Value: v}); err != nil {
+							return err
+						}
+						shell(true)
+						return nil
 					}
-				}
-				sort.Slice(own, func(i, j int) bool { return own[i].Value < own[j].Value })
-				if c := cur["model"]; c != "" && !usesMagpie(c) && custom[c] == nil {
-					own = append([]Option{{Value: c, Icon: modelIcon("", c), Direct: "Google"}}, own...)
-				}
-				return append(group("Antigravity CLI", own), viaMagpie("agy", magpieID+"/")...)
+					if usesMagpie(cur) {
+						// back to what the user had
+						if v == "" {
+							v = unstash(stashModel)
+						} else {
+							forget(stashModel)
+						}
+						if err := put("modelProvider", unstash(stashProvider)); err != nil {
+							return err
+						}
+					}
+					if err := put("model", v); err != nil {
+						return err
+					}
+					if usesMagpie(cur) {
+						shell(false)
+					}
+					return setModels(false)
+				},
+				Options: func(cur map[string]string) []Option {
+					custom := agyCustom(path)
+					// its own say they go to their provider, not through magpie,
+					// as every agent's own do (EZN7L2C3, #834)
+					var own []Option
+					for k := range custom {
+						if !strings.HasPrefix(k, magpieID+"/") {
+							to := "Google"
+							if p := gjson.GetBytes(custom[k], "apiProvider").String(); strings.Contains(p, "ANTHROPIC") {
+								to = "Anthropic"
+							} else if strings.Contains(p, "OPENAI") {
+								to = "OpenAI"
+							}
+							own = append(own, Option{Value: k, Icon: modelIcon("", gjson.GetBytes(custom[k], "modelName").String()), Direct: to})
+						}
+					}
+					sort.Slice(own, func(i, j int) bool { return own[i].Value < own[j].Value })
+					if c := cur["model"]; c != "" && !usesMagpie(c) && custom[c] == nil {
+						own = append([]Option{{Value: c, Icon: modelIcon("", c), Direct: "Google"}}, own...)
+					}
+					return append(group("Antigravity CLI", own), viaMagpie("agy", magpieID+"/")...)
+				},
 			},
-		}},
+			{
+				Key: "account", Label: "account", Quiet: true,
+				Get: func() string {
+					return provider.FirstLogin("antigravity")
+				},
+				Set: func(v string) error {
+					if v == "" {
+						return nil
+					}
+					return provider.SwitchLogin("antigravity", v)
+				},
+				Options: func(cur map[string]string) []Option {
+					var opts []Option
+					for _, l := range provider.Logins("antigravity") {
+						note := l.Plan
+						if l.Active {
+							if note != "" {
+								note = "active · " + note
+							} else {
+								note = "active"
+							}
+						}
+						opts = append(opts, Option{
+							Value: l.User,
+							Label: l.User,
+							Note:  note,
+						})
+					}
+					return opts
+				},
+			},
+		},
 	}
 }
 
